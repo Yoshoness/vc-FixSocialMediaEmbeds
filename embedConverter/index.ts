@@ -17,70 +17,113 @@
 */
 
 import { MessageObject } from "@api/MessageEvents";
-import definePlugin, { OptionType} from "@utils/types";
+import definePlugin, { OptionType } from "@utils/types";
 import { definePluginSettings } from "@api/Settings";
-
-// From lodash
-const reRegExpChar = /[\\^$.*+?()[\]{}|]/g;
-const reHasRegExpChar = RegExp(reRegExpChar.source);
 
 const settings = definePluginSettings({
     enableTwitterOrX: {
         description: "Allow Twitter/X embeds to be altered.",
         type: OptionType.BOOLEAN,
-        default: true
+        default: true,
     },
     twitterOrXEmbed: {
         description: "Enter which embedder to use for Twitter/X links.",
         type: OptionType.STRING,
         default: "vxtwitter",
-        disabled: () => settings.store.enableTwitterOrX !== true,
     },
     enableInstagram: {
         description: "Allow Instagram embeds to be altered.",
         type: OptionType.BOOLEAN,
-        default: true
+        default: true,
     },
     instagramEmbed: {
         description: "Enter which embedder to use for Instagram links.",
         type: OptionType.STRING,
         default: "ddinstagram",
-        disabled: () => settings.store.enableInstagram !== true,
     },
     enableReddit: {
         description: "Allow Reddit embeds to be altered.",
         type: OptionType.BOOLEAN,
-        default: true
+        default: true,
     },
     redditEmbed: {
         description: "Enter which embedder to use for Reddit links.",
         type: OptionType.STRING,
         default: "vxreddit",
-        disabled: () => settings.store.enableReddit !== true,
     },
     enableBluesky: {
         description: "Allow BlueSky embeds to be altered.",
         type: OptionType.BOOLEAN,
-        default: true
+        default: true,
     },
-    BlueskyEmbed: {
-        description: "Enter which embedder to use for Reddit links.",
+    blueskyEmbed: {
+        description: "Enter which embedder to use for BlueSky links.",
         type: OptionType.STRING,
         default: "bskye",
-        disabled: () => settings.store.enableBluesky !== true,
     },
     enableTiktok: {
         description: "Allow TikTok embeds to be altered.",
         type: OptionType.BOOLEAN,
-        default: true
+        default: true,
     },
     tiktokEmbed: {
         description: "Enter which embedder to use for TikTok links.",
         type: OptionType.STRING,
         default: "tnktok",
-        disabled: () => settings.store.enableTiktok !== true,
     },
-})
+});
+
+function replacer(match: string): string {
+    try {
+        const url = new URL(match);
+
+        if (settings.store.enableTwitterOrX && url.href.match(/^https?:\/\/(?:(?:.+)\.)?(twitter|x)\.com\/(.+)\/status\/(\d+)(\?.+)?$/)
+        ) {
+            return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?(twitter|x)\.com\/(.+)\/status\/(\d+)(\?.+)?$/,
+                `https://${settings.store.twitterOrXEmbed}.com/$2/status/$3`
+            );
+        }
+
+        if (settings.store.enableInstagram && url.href.match(/^https?:\/\/(?:(?:.+)\.)?instagram\.com\/(.+)/)
+        ) {
+            return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?instagram\.com\/(.+)/,
+                `https://${settings.store.instagramEmbed}.com/$1`
+            );
+        }
+
+        if (settings.store.enableReddit && url.href.match(/^https?:\/\/(?:(?:.+)\.)?reddit\.com\/(.+)/)
+        ) {
+            return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?reddit\.com\/(.+)/,
+                `https://${settings.store.redditEmbed}.com/$1`
+            );
+        }
+
+        if (settings.store.enableBluesky &&url.href.match(/^https?:\/\/(?:(?:.+)\.)?bsky\.app\/profile\/(.+)/)
+        ) {
+            return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?bsky\.app\/profile\/(.+)/,
+                `https://${settings.store.blueskyEmbed}.app/profile/$1`
+            );
+        }
+
+        if (settings.store.enableTiktok && url.href.match(/^https?:\/\/(?:(?:.+)\.)?tiktok\.com\/(.+?)(\?.+)?$/)
+        ) {
+            return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?tiktok\.com\/(.+?)(\?.+)?$/,
+                `https://${settings.store.tiktokEmbed}.com/$1`
+            );
+        }
+        return url.href;
+    } catch {
+        return match;
+    }
+}
+
+function rewriteContent(msg: MessageObject) {
+    if (!msg?.content) return;
+    msg.content = msg.content.replace(
+        /(https?:\/\/[^\s<]+[^<.,:;"'>)|\]\s])/g,
+        match => replacer(match)
+    );
+}
 
 export default definePlugin({
     name: "FixSocialMediaEmbeds",
@@ -89,89 +132,13 @@ export default definePlugin({
     settings,
 
     start() { },
+    stop() { },
 
     onBeforeMessageSend(_, msg) {
-        return this.onSend(msg);
+        rewriteContent(msg);
     },
 
-    onBeforeMessageEdit(_cid, _mid, msg) {
-        return this.onSend(msg);
-    },
-
-    escapeRegExp(str: string) {
-        return (str && reHasRegExpChar.test(str))
-            ? str.replace(reRegExpChar, "\\$&")
-            : (str || "");
-    },
-
-    replacer(match: string) {
-
-        try {
-            var url = new URL(match);
-        } catch (error) {
-            return match;
-        }
-
-        //twitter
-        try {
-            if (settings.store.enableTwitterOrX && url.href.match(/^https+:\/\/(?:(?:.+)\.)?(?:twitter|x)\.com\/(.+)\/status\/(\d+)(\?.+)?$/)) {
-                return url.href.replace(/^https+:\/\/(?:(?:.+)\.)?(?:twitter|x)\.com\/(.+)\/status\/(\d+)(\?.+)?$/,
-                    ['https://', settings.store.twitterOrXEmbed, '.com/$1/status/$2'].join(''));
-            }
-        } catch (error) {
-            return match;
-        }
-
-        //instagram
-        try {
-            if (settings.store.enableInstagram && url.href.match(/^https+:\/\/(?:(?:.+)\.)?instagram\.com\/(.+)/)) {
-                return url.href.replace(/^https+:\/\/(?:(?:.+)\.)?instagram\.com\/(.+)/,
-                    ['https://', settings.store.instagramEmbed, '.com/$1'].join(''));
-            }
-        } catch (error) {
-            return match;
-        }
-
-        //reddit
-        try {
-            if (settings.store.enableReddit && url.href.match(/^https+:\/\/(?:(?:.+)\.)?reddit\.com\/(.+)/)) {
-                return url.href.replace(/^https+:\/\/(?:(?:.+)\.)?reddit\.com\/(.+)/,
-                    ["https://", settings.store.redditEmbed, ".com/$1"].join(''));
-            }
-        } catch (error) {
-            return match;
-        }
-
-        //bluesky
-        try {
-            if (settings.store.enableBluesky && url.href.match(/^https+:\/\/(?:(?:.+)\.)?bsky\.app\/profile\/(.+)/)) {
-                return url.href.replace(/^https+:\/\/(?:(?:.+)\.)?bsky\.app\/profile\/(.+)/,
-                    ["https://", settings.store.BlueskyEmbed, ".app/profile/$1"].join(''));
-            }
-        } catch (error) {
-            return match;
-        }
-
-        //tiktok
-        try {
-            if (settings.store.enableTiktok && url.href.match(/^https+:\/\/(?:(?:.+)\.)?tiktok\.com\/(.+)\?(.+)/)) {
-                return url.href.replace(/^https+:\/\/(?:(?:.+)\.)?tiktok\.com\/(.+)\?(.+)/,
-                    ["https://", settings.store.tiktokEmbed, ".com/$1"].join(''));
-            }
-        } catch (error) {
-            return match;
-        }
-
-        return url.toString();
-    },
-
-    onSend(msg: MessageObject) {
-        // Only run on messages that contain URLs
-        if (msg.content.match(/http(s)?:\/\//)) {
-            msg.content = msg.content.replace(
-                /(https?:\/\/[^\s<]+[^<.,:;"'>)|\]\s])/g,
-                match => this.replacer(match)
-            );
-        }
-    },
+    onBeforeMessageEdit(_, __, msg) {
+        rewriteContent(msg);
+    }
 });
