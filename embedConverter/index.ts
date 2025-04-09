@@ -77,36 +77,31 @@ function replacer(match: string): string {
     try {
         const url = new URL(match);
 
-        if (settings.store.enableTwitterOrX && url.href.match(/^https?:\/\/(?:(?:.+)\.)?(twitter|x)\.com\/(.+)\/status\/(\d+)(\?.+)?$/)
-        ) {
+        if (settings.store.enableTwitterOrX && url.href.match(/^https?:\/\/(?:(?:.+)\.)?(twitter|x)\.com\/(.+)\/status\/(\d+)(\?.+)?$/)) {
             return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?(twitter|x)\.com\/(.+)\/status\/(\d+)(\?.+)?$/,
                 `https://${settings.store.twitterOrXEmbed}.com/$2/status/$3`
             );
         }
 
-        if (settings.store.enableInstagram && url.href.match(/^https?:\/\/(?:(?:.+)\.)?instagram\.com\/(.+)/)
-        ) {
+        if (settings.store.enableInstagram && url.href.match(/^https?:\/\/(?:(?:.+)\.)?instagram\.com\/(.+)/)) {
             return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?instagram\.com\/(.+)/,
                 `https://${settings.store.instagramEmbed}.com/$1`
             );
         }
 
-        if (settings.store.enableReddit && url.href.match(/^https?:\/\/(?:(?:.+)\.)?reddit\.com\/(.+)/)
-        ) {
+        if (settings.store.enableReddit && url.href.match(/^https?:\/\/(?:(?:.+)\.)?reddit\.com\/(.+)/)) {
             return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?reddit\.com\/(.+)/,
                 `https://${settings.store.redditEmbed}.com/$1`
             );
         }
 
-        if (settings.store.enableBluesky &&url.href.match(/^https?:\/\/(?:(?:.+)\.)?bsky\.app\/profile\/(.+)/)
-        ) {
+        if (settings.store.enableBluesky &&url.href.match(/^https?:\/\/(?:(?:.+)\.)?bsky\.app\/profile\/(.+)/)) {
             return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?bsky\.app\/profile\/(.+)/,
                 `https://${settings.store.blueskyEmbed}.app/profile/$1`
             );
         }
 
-        if (settings.store.enableTiktok && url.href.match(/^https?:\/\/(?:(?:.+)\.)?tiktok\.com\/(.+?)(\?.+)?$/)
-        ) {
+        if (settings.store.enableTiktok && url.href.match(/^https?:\/\/(?:(?:.+)\.)?tiktok\.com\/(.+?)(\?.+)?$/)) {
             return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?tiktok\.com\/(.+?)(\?.+)?$/,
                 `https://${settings.store.tiktokEmbed}.com/$1`
             );
