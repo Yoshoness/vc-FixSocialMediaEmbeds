@@ -75,38 +75,51 @@ const settings = definePluginSettings({
 
 function replacer(match: string): string {
     try {
-        const url = new URL(match);
+        // check for <> around url in order to send normal embed
+        let tempurl = match.match(/^<(.*)+>$/) ? match.substring(1, match.length - 1) : match;
+        let noFix = match.match(/^<(.*)+>$/) ? true : false,
+            matchSite = false;
+
+        let url = new URL(tempurl);
 
         if (settings.store.enableTwitterOrX && url.href.match(/^https?:\/\/(?:(?:.+)\.)?(twitter|x)\.com\/(.+)\/status\/(\d+)(\?.+)?$/)) {
-            return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?(twitter|x)\.com\/(.+)\/status\/(\d+)(\?.+)?$/,
-                `https://${settings.store.twitterOrXEmbed}.com/$2/status/$3`
-            );
+            matchSite = true;
+            if (!noFix) return new URL(match).href.replace(/^https?:\/\/(?:(?:.+)\.)?(twitter|x)\.com\/(.+)\/status\/(\d+)(\?.+)?$/,
+                    `https://${settings.store.twitterOrXEmbed}.com/$2/status/$3`
+                );
         }
 
-        if (settings.store.enableInstagram && url.href.match(/^https?:\/\/(?:(?:.+)\.)?instagram\.com\/(.+)/)) {
-            return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?instagram\.com\/(.+)/,
-                `https://${settings.store.instagramEmbed}.com/$1`
-            );
+        else if (settings.store.enableInstagram && url.href.match(/^https?:\/\/(?:(?:.+)\.)?instagram\.com\/(p|reel)\/(.+)/)) {
+            matchSite = true;
+            if (!noFix) return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?instagram\.com\/(.+)/,
+                    `https://${settings.store.instagramEmbed}.com/$1/$2`
+                );
         }
 
-        if (settings.store.enableReddit && url.href.match(/^https?:\/\/(?:(?:.+)\.)?reddit\.com\/(.+)/)) {
-            return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?reddit\.com\/(.+)/,
-                `https://${settings.store.redditEmbed}.com/$1`
-            );
+        else if (settings.store.enableReddit && url.href.match(/^https?:\/\/(?:(?:.+)\.)?reddit\.com\/(.+)/)) {
+            matchSite = true;
+            if (!noFix) return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?reddit\.com\/(.+)/,
+                    `https://${settings.store.redditEmbed}.com/$1`
+                );
         }
 
-        if (settings.store.enableBluesky &&url.href.match(/^https?:\/\/(?:(?:.+)\.)?bsky\.app\/profile\/(.+)/)) {
-            return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?bsky\.app\/profile\/(.+)/,
-                `https://${settings.store.blueskyEmbed}.app/profile/$1`
-            );
+        else if (settings.store.enableBluesky && url.href.match(/^https?:\/\/(?:(?:.+)\.)?bsky\.app\/profile\/(.+)/)) {
+            matchSite = true;
+            if (!noFix) return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?bsky\.app\/profile\/(.+)/,
+                    `https://${settings.store.blueskyEmbed}.app/profile/$1`
+                );
         }
 
-        if (settings.store.enableTiktok && url.href.match(/^https?:\/\/(?:(?:.+)\.)?tiktok\.com\/(.+?)(\?.+)?$/)) {
-            return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?tiktok\.com\/(.+?)(\?.+)?$/,
-                `https://${settings.store.tiktokEmbed}.com/$1`
-            );
+        else if (settings.store.enableTiktok && url.href.match(/^https?:\/\/(?:(?:.+)\.)?tiktok\.com\/(.+?)(\?.+)?$/)) {
+            matchSite = true;
+            if (!noFix) return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?tiktok\.com\/(.+?)(\?.+)?$/,
+                    `https://${settings.store.tiktokEmbed}.com/$1`
+                );
         }
-        return url.href;
+
+        if (noFix && !matchSite) //if site didn't match but is set to not be embedded
+            return match
+        return url.href
     } catch {
         return match;
     }
@@ -115,7 +128,7 @@ function replacer(match: string): string {
 function rewriteContent(msg: MessageObject) {
     if (!msg?.content) return;
     msg.content = msg.content.replace(
-        /(https?:\/\/[^\s<]+[^<.,:;"'>)|\]\s])/g,
+        /<?(https?:\/\/[^\s<]+[^<.,:;"'>)|\]\s])>?/g,
         match => replacer(match)
     );
 }
