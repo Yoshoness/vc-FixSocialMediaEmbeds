@@ -91,7 +91,7 @@ function replacer(match: string): string {
 
         else if (settings.store.enableInstagram && url.href.match(/^https?:\/\/(?:(?:.+)\.)?instagram\.com\/(p|reel)\/(.+)/)) {
             matchSite = true;
-            if (!noFix) return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?instagram\.com\/(.+)/,
+            if (!noFix) return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?instagram\.com\/(p|reel)\/(.+)/,
                     `https://${settings.store.instagramEmbed}.com/$1/$2`
                 );
         }
