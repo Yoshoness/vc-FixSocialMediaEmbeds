@@ -16,11 +16,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import "./style.css";
+
 import { MessageObject } from "@api/MessageEvents";
 import definePlugin, { OptionType } from "@utils/types";
 import { definePluginSettings } from "@api/Settings";
+import { Toasts, showToast } from "@webpack/common";
+import { EmbedChatBarIcon, EmbedIcon } from "./EmbedIcon";
 
-const settings = definePluginSettings({
+export const settings = definePluginSettings({
     enableTwitterOrX: {
         description: "Allow Twitter/X embeds to be altered.",
         type: OptionType.BOOLEAN,
@@ -71,7 +75,12 @@ const settings = definePluginSettings({
         type: OptionType.STRING,
         default: "tnktok",
     },
-});
+    autoConvert: {
+        type: OptionType.BOOLEAN,
+        description: "Automatically convert your links before sending.",
+        default: false
+    }
+})
 
 function replacer(match: string): string {
     try {
@@ -82,44 +91,59 @@ function replacer(match: string): string {
 
         let url = new URL(tempurl);
 
-        if (settings.store.enableTwitterOrX && url.href.match(/^https?:\/\/(?:(?:.+)\.)?(twitter|x)\.com\/(.+)\/status\/(\d+)(\?.+)?$/)) {
+        if (settings.store.enableTwitterOrX && url.href.match(/^https?:\/\/(?:(?:.+)\.)?(twitter|x)\.com\/(.+)\/status\/(\d+(\/photo\/.)?)(\?.+)?/)) {
             matchSite = true;
-            if (!noFix) return new URL(match).href.replace(/^https?:\/\/(?:(?:.+)\.)?(twitter|x)\.com\/(.+)\/status\/(\d+)(\?.+)?$/,
+            if (!noFix) {
+                showToast("Link altered to fix embed.", Toasts.Type.SUCCESS);
+                return new URL(match).href.replace(/^https?:\/\/(?:(?:.+)\.)?(twitter|x)\.com\/(.+)\/status\/(\d+(\/photo\/.)?)(\?.+)?/,
                     `https://${settings.store.twitterOrXEmbed}.com/$2/status/$3`
                 );
+            }
         }
 
         else if (settings.store.enableInstagram && url.href.match(/^https?:\/\/(?:(?:.+)\.)?instagram\.com\/(p|reel)\/(.+)/)) {
             matchSite = true;
-            if (!noFix) return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?instagram\.com\/(p|reel)\/(.+)/,
+            if (!noFix) {
+                showToast("Link altered to fix embed.", Toasts.Type.SUCCESS);
+                return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?instagram\.com\/(p|reel)\/(.+)/,
                     `https://${settings.store.instagramEmbed}.com/$1/$2`
                 );
+            }
         }
 
         else if (settings.store.enableReddit && url.href.match(/^https?:\/\/(?:(?:.+)\.)?reddit\.com\/(.+)/)) {
             matchSite = true;
-            if (!noFix) return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?reddit\.com\/(.+)/,
+            if (!noFix) {
+                showToast("Link altered to fix embed.", Toasts.Type.SUCCESS);
+                return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?reddit\.com\/(.+)/,
                     `https://${settings.store.redditEmbed}.com/$1`
                 );
+            }
         }
 
         else if (settings.store.enableBluesky && url.href.match(/^https?:\/\/(?:(?:.+)\.)?bsky\.app\/profile\/(.+)/)) {
             matchSite = true;
-            if (!noFix) return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?bsky\.app\/profile\/(.+)/,
+            if (!noFix) {
+                showToast("Link altered to fix embed.", Toasts.Type.SUCCESS);
+                return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?bsky\.app\/profile\/(.+)/,
                     `https://${settings.store.blueskyEmbed}.app/profile/$1`
                 );
+            }
         }
 
         else if (settings.store.enableTiktok && url.href.match(/^https?:\/\/(?:(?:.+)\.)?tiktok\.com\/(.+?)(\?.+)?$/)) {
             matchSite = true;
-            if (!noFix) return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?tiktok\.com\/(.+?)(\?.+)?$/,
+            if (!noFix) {
+                showToast("Link altered to fix embed.", Toasts.Type.SUCCESS);
+                return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?tiktok\.com\/(.+?)(\?.+)?$/,
                     `https://${settings.store.tiktokEmbed}.com/$1`
                 );
+            }
         }
 
         if (noFix && !matchSite) //if site didn't match but is set to not be embedded
             return match
-        return url.href
+        return url.href //return base url if site matches and is omitted
     } catch {
         return match;
     }
@@ -139,14 +163,13 @@ export default definePlugin({
     authors: [{ name: "Yoshoness", id: 206081832289042432n }],
     settings,
 
-    start() { },
-    stop() { },
-
-    onBeforeMessageSend(_, msg) {
-        rewriteContent(msg);
+    chatBarButton: {
+        icon: EmbedIcon,
+        render: EmbedChatBarIcon
     },
 
-    onBeforeMessageEdit(_, __, msg) {
+    onBeforeMessageSend(_, msg) {
+        if (!settings.store.autoConvert) return;
         rewriteContent(msg);
-    }
+    },
 });
