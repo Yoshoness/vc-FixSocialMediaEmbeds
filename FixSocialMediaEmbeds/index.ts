@@ -33,7 +33,7 @@ export const settings = definePluginSettings({
     twitterOrXEmbed: {
         description: "Enter which embedder to use for Twitter/X links.",
         type: OptionType.STRING,
-        default: "vxtwitter",
+        default: "fxtwitter",
     },
     enableInstagram: {
         description: "Allow Instagram embeds to be altered.",
@@ -43,7 +43,7 @@ export const settings = definePluginSettings({
     instagramEmbed: {
         description: "Enter which embedder to use for Instagram links.",
         type: OptionType.STRING,
-        default: "ddinstagram",
+        default: "vxinstagram",
     },
     enableReddit: {
         description: "Allow Reddit embeds to be altered.",
@@ -78,7 +78,7 @@ export const settings = definePluginSettings({
     autoConvert: {
         type: OptionType.BOOLEAN,
         description: "Automatically convert your links before sending.",
-        default: false
+        default: true
     }
 })
 
@@ -93,6 +93,7 @@ function replacer(match: string): string {
 
         if (settings.store.enableTwitterOrX && url.href.match(/^https?:\/\/(?:(?:.+)\.)?(twitter|x)\.com\/(.+)\/status\/(\d+(\/photo\/.)?)(\?.+)?/)) {
             matchSite = true;
+            if (!settings.store.twitterOrXEmbed) settings.store.twitterOrXEmbed = "fxtwitter";
             if (!noFix) {
                 showToast("Link altered to fix embed.", Toasts.Type.SUCCESS);
                 return new URL(match).href.replace(/^https?:\/\/(?:(?:.+)\.)?(twitter|x)\.com\/(.+)\/status\/(\d+(\/photo\/.)?)(\?.+)?/,
@@ -103,6 +104,7 @@ function replacer(match: string): string {
 
         else if (settings.store.enableInstagram && url.href.match(/^https?:\/\/(?:(?:.+)\.)?instagram\.com\/(p|reel)\/(.+)/)) {
             matchSite = true;
+            if (!settings.store.instagramEmbed) settings.store.instagramEmbed = "vxinstagram";
             if (!noFix) {
                 showToast("Link altered to fix embed.", Toasts.Type.SUCCESS);
                 return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?instagram\.com\/(p|reel)\/(.+)/,
@@ -113,6 +115,7 @@ function replacer(match: string): string {
 
         else if (settings.store.enableReddit && url.href.match(/^https?:\/\/(?:(?:.+)\.)?reddit\.com\/(.+)/)) {
             matchSite = true;
+            if (!settings.store.redditEmbed) settings.store.redditEmbed = "vxreddit";
             if (!noFix) {
                 showToast("Link altered to fix embed.", Toasts.Type.SUCCESS);
                 return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?reddit\.com\/(.+)/,
@@ -123,6 +126,7 @@ function replacer(match: string): string {
 
         else if (settings.store.enableBluesky && url.href.match(/^https?:\/\/(?:(?:.+)\.)?bsky\.app\/profile\/(.+)/)) {
             matchSite = true;
+            if (!settings.store.blueskyEmbed) settings.store.blueskyEmbed = "bskye";
             if (!noFix) {
                 showToast("Link altered to fix embed.", Toasts.Type.SUCCESS);
                 return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?bsky\.app\/profile\/(.+)/,
@@ -133,6 +137,7 @@ function replacer(match: string): string {
 
         else if (settings.store.enableTiktok && url.href.match(/^https?:\/\/(?:(?:.+)\.)?tiktok\.com\/(.+?)(\?.+)?$/)) {
             matchSite = true;
+            if (!settings.store.tiktokEmbed) settings.store.tiktokEmbed = "tnktok";
             if (!noFix) {
                 showToast("Link altered to fix embed.", Toasts.Type.SUCCESS);
                 return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?tiktok\.com\/(.+?)(\?.+)?$/,
