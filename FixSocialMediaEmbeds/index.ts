@@ -95,7 +95,6 @@ function replacer(match: string): string {
             matchSite = true;
             if (!settings.store.twitterOrXEmbed) settings.store.twitterOrXEmbed = "fxtwitter";
             if (!noFix) {
-                showToast("Link altered to fix embed.", Toasts.Type.SUCCESS);
                 return new URL(match).href.replace(/^https?:\/\/(?:(?:.+)\.)?(twitter|x)\.com\/(.+)\/status\/(\d+(\/photo\/.)?)(\?.+)?/,
                     `https://${settings.store.twitterOrXEmbed}.com/$2/status/$3`
                 );
@@ -106,7 +105,6 @@ function replacer(match: string): string {
             matchSite = true;
             if (!settings.store.instagramEmbed) settings.store.instagramEmbed = "vxinstagram";
             if (!noFix) {
-                showToast("Link altered to fix embed.", Toasts.Type.SUCCESS);
                 return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?instagram\.com\/(p|reel)\/(.+)/,
                     `https://${settings.store.instagramEmbed}.com/$1/$2`
                 );
@@ -117,7 +115,6 @@ function replacer(match: string): string {
             matchSite = true;
             if (!settings.store.redditEmbed) settings.store.redditEmbed = "vxreddit";
             if (!noFix) {
-                showToast("Link altered to fix embed.", Toasts.Type.SUCCESS);
                 return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?reddit\.com\/(.+)/,
                     `https://${settings.store.redditEmbed}.com/$1`
                 );
@@ -128,7 +125,6 @@ function replacer(match: string): string {
             matchSite = true;
             if (!settings.store.blueskyEmbed) settings.store.blueskyEmbed = "bskye";
             if (!noFix) {
-                showToast("Link altered to fix embed.", Toasts.Type.SUCCESS);
                 return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?bsky\.app\/profile\/(.+)/,
                     `https://${settings.store.blueskyEmbed}.app/profile/$1`
                 );
@@ -139,7 +135,6 @@ function replacer(match: string): string {
             matchSite = true;
             if (!settings.store.tiktokEmbed) settings.store.tiktokEmbed = "tnktok";
             if (!noFix) {
-                showToast("Link altered to fix embed.", Toasts.Type.SUCCESS);
                 return url.href.replace(/^https?:\/\/(?:(?:.+)\.)?tiktok\.com\/(.+?)(\?.+)?$/,
                     `https://${settings.store.tiktokEmbed}.com/$1`
                 );
